@@ -197,6 +197,12 @@ const SUPA_HEADERS = {
   'Authorization': `Bearer ${SUPA_KEY}`
 };
 
+/* ── Ownership tracking (per device) ── */
+const OWNED_KEY = 'my-upload-ids';
+function getOwnedIds(){ try{ return new Set(JSON.parse(localStorage.getItem(OWNED_KEY)||'[]')); }catch(e){ return new Set(); } }
+function addOwnedId(publicId){ const s=getOwnedIds(); s.add(publicId); localStorage.setItem(OWNED_KEY, JSON.stringify([...s])); }
+function removeOwnedId(publicId){ const s=getOwnedIds(); s.delete(publicId); localStorage.setItem(OWNED_KEY, JSON.stringify([...s])); }
+
 /* ── Supabase helpers ── */
 async function dbGetAll(){
   const res = await fetch(`${SUPA_URL}/rest/v1/uploads?select=*&order=created_at.desc`, {
@@ -338,7 +344,10 @@ function createCard(item){
   const overlayDownload = el('button', {className:'overlay-btn', title:'Download'}, '⬇️');
   const overlayOpen     = el('button', {className:'overlay-btn', title:'Open'},     '🔍');
   const overlayDelete   = el('button', {className:'overlay-btn', title:'Delete'},   '🗑️');
-  overlay.append(overlayOpen, overlayDownload, overlayDelete);
+  const ownedIds = getOwnedIds();
+  const isOwned = ownedIds.has(item.public_id) || ownedIds.has(item.publicId);
+  if(isOwned) overlay.append(overlayOpen, overlayDownload, overlayDelete);
+  else overlay.append(overlayOpen, overlayDownload);
   preview.appendChild(overlay);
 
   const meta = el('div', {className:'meta'},
@@ -361,7 +370,9 @@ function createCard(item){
   overlayDelete.addEventListener('click', async (e)=>{
     e.stopPropagation();
     if(!confirm('Delete this item?')) return;
-    await dbDelete(item.public_id || item.publicId);
+    const pid = item.public_id || item.publicId;
+    await dbDelete(pid);
+    removeOwnedId(pid);
     render();
   });
 
@@ -427,6 +438,7 @@ async function handleFiles(fileList, type){
     });
     showUploadStatus('Saving…', 1);
     await dbAdd(entry);
+    addOwnedId(entry.publicId);
     titleInput.value = '';
     render();
   } catch(err){
@@ -483,6 +495,7 @@ takePhotoBtn.addEventListener('click', async ()=>{
       });
       showUploadStatus('Saving…', 1);
       await dbAdd(entry);
+      addOwnedId(entry.publicId);
       titleInput.value = ''; render();
     } catch(err){ alert('Upload failed: '+err.message); }
     finally { hideUploadStatus(); }
@@ -506,7 +519,9 @@ startRecordBtn.addEventListener('click', ()=>{
         showUploadStatus(`Uploading… ${Math.round(p*100)}%`, p);
       });
       showUploadStatus('Saving…', 1);
-      await dbAdd(entry); titleInput.value = ''; render();
+      await dbAdd(entry);
+      addOwnedId(entry.publicId);
+      titleInput.value = ''; render();
     } catch(err){ alert('Upload failed: '+err.message); }
     finally { hideUploadStatus(); }
   };
@@ -550,6 +565,8 @@ window.addEventListener('open-viewer', (e)=>{
   }
   viewerTitle.textContent    = item.title    || 'Untitled';
   viewerUploader.textContent = item.uploader || 'Anonymous';
+  const owned = getOwnedIds();
+  viewerDelete.style.display = (owned.has(item.public_id) || owned.has(item.publicId)) ? '' : 'none';
   viewerModal.classList.remove('hidden');
 });
 
@@ -567,7 +584,9 @@ viewerDownload.addEventListener('click', ()=>{
 viewerDelete.addEventListener('click', async ()=>{
   if(!currentViewerItem) return;
   if(!confirm('Delete this item?')) return;
-  await dbDelete(currentViewerItem.public_id || currentViewerItem.publicId);
+  const pid = currentViewerItem.public_id || currentViewerItem.publicId;
+  await dbDelete(pid);
+  removeOwnedId(pid);
   closeViewer(); render();
 });
 
