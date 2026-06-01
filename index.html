@@ -5,305 +5,113 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Camera Uploads</title>
   <style>
-/* Bare-bones, no decoration stylesheet */
-
 * { box-sizing: border-box; margin: 0; padding: 0; }
-
 html, body, #app { height: 100%; }
-
 body {
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-  background: #fff;
-  color: #000;
-  padding: 12px;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
+  background: #fff; color: #000; padding: 12px;
+  display: flex; justify-content: center; align-items: flex-start;
 }
-
-main {
-  width: 100%;
-  max-width: 900px;
-}
-
-/* Controls */
-.controls {
-  background: transparent;
-  padding: 8px;
-  margin-bottom: 8px;
-}
-
-.input-row {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-
+main { width: 100%; max-width: 900px; }
+.controls { background: transparent; padding: 8px; margin-bottom: 8px; }
+.input-row { display: flex; gap: 8px; margin-bottom: 8px; }
 .input-row input {
-  flex: 1;
-  padding: 8px;
-  border: 1px solid #000;
-  background: transparent;
-  color: inherit;
-  font-size: 14px;
-  border-radius: 0;
+  flex: 1; padding: 8px; border: 1px solid #000;
+  background: transparent; color: inherit; font-size: 14px; border-radius: 0;
 }
-
-/* Buttons */
-.buttons-row {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
+.buttons-row { display: flex; gap: 8px; flex-wrap: wrap; }
 .btn {
-  padding: 8px;
-  border: 1px solid #000;
-  background: transparent;
-  color: inherit;
-  cursor: pointer;
-  font-size: 14px;
-  border-radius: 0;
+  padding: 8px; border: 1px solid #000; background: transparent;
+  color: inherit; cursor: pointer; font-size: 14px; border-radius: 0;
 }
-
 .btn input { display: none; }
-
-.btn.danger {
-  border-color: #000;
-  color: #000;
-}
-
-/* Gallery */
+.btn.danger { border-color: #000; color: #000; }
 #gallery {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 8px;
 }
-
 .card {
-  border: 1px solid #000;
-  background: transparent;
-  display: flex;
-  flex-direction: column;
-  min-height: 120px;
-  border-radius: 0;
-  overflow: visible;
+  border: 1px solid #000; background: transparent;
+  display: flex; flex-direction: column; min-height: 120px;
+  border-radius: 0; overflow: visible;
 }
-
 .preview {
-  width: 100%;
-  height: 100px;
-  background: #000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  position: relative;
+  width: 100%; height: 100px; background: #000;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden; position: relative;
 }
-
-/* overlay buttons inside preview so icons fit per item — hidden until hover/focus */
 .preview-overlay {
-  position: absolute;
-  right: 6px;
-  top: 6px;
-  display: flex;
-  gap: 6px;
-  z-index: 2;
-  opacity: 0;
-  transform: translateY(-4px);
+  position: absolute; right: 6px; top: 6px;
+  display: flex; gap: 6px; z-index: 2;
+  opacity: 0; transform: translateY(-4px);
   transition: opacity 120ms ease, transform 120ms ease;
-  pointer-events: none; /* prevent interaction when hidden */
+  pointer-events: none;
 }
-
-/* reveal overlay when preview is hovered or focused (keyboard accessible) */
 .preview:hover .preview-overlay,
 .preview:focus .preview-overlay,
 .preview:focus-within .preview-overlay {
-  opacity: 1;
-  transform: translateY(0);
-  pointer-events: auto;
+  opacity: 1; transform: translateY(0); pointer-events: auto;
 }
-
-/* While viewer is open, prevent overlays from appearing even on hover/focus */
 .overlays-disabled .preview:hover .preview-overlay,
 .overlays-disabled .preview:focus .preview-overlay,
 .overlays-disabled .preview:focus-within .preview-overlay {
-  opacity: 0 !important;
-  transform: translateY(-4px) !important;
-  pointer-events: none !important;
+  opacity: 0 !important; transform: translateY(-4px) !important; pointer-events: none !important;
 }
-
-/* Mobile: explicit visible class to show overlay (toggled via touch) */
-.preview-overlay.visible {
-  opacity: 1;
-  transform: translateY(0);
-  pointer-events: auto;
-}
-
-/* Avoid focus outlines on touch devices (prevents janky mobile focus behaviour) */
+.preview-overlay.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
 @media (hover: none) and (pointer: coarse) {
   .preview:focus { outline: none; }
   .preview { -webkit-tap-highlight-color: transparent; }
 }
-
 .overlay-btn {
-  background: rgba(255,255,255,0.95);
-  border: 1px solid #000;
-  padding: 4px;
-  font-size: 14px;
-  cursor: pointer;
-  line-height: 1;
+  background: rgba(255,255,255,0.95); border: 1px solid #000;
+  padding: 4px; font-size: 14px; cursor: pointer; line-height: 1;
 }
-
-/* Keep action buttons compact in meta */
-.actions .action-btn { padding: 4px; font-size: 13px; }
-
-/* viewer modal media container sizing */
 #viewerMediaWrap {
-  width: 100%;
-  max-height: 60vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
+  width: 100%; max-height: 60vh;
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
 }
-
-/* Force media in the viewer to be contained and not trigger fullscreen scaling on iOS */
-#viewerMediaWrap video,
-#viewerMediaWrap img {
-  max-width: 100%;
-  max-height: 60vh;
-  width: auto;
-  height: auto;
-  object-fit: contain;
-  display: block;
+#viewerMediaWrap video, #viewerMediaWrap img {
+  max-width: 100%; max-height: 60vh; width: auto; height: auto;
+  object-fit: contain; display: block;
 }
-
-/* Truncate long title/uploader text inside the viewer so it doesn't overflow the modal */
-#viewerTitle,
-#viewerUploader {
-  max-width: 60vw;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  display: block;
+#viewerTitle, #viewerUploader {
+  max-width: 60vw; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap; display: block;
 }
-
-/* Slightly smaller uploader text in viewer */
-#viewerUploader {
-  font-size: 13px;
-  color: inherit;
-  opacity: 0.9;
-}
-
-.preview img, .preview video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.meta {
-  padding: 6px;
-  display: flex;
-  justify-content: space-between;
-  gap: 6px;
-  align-items: center;
-}
-
-/* Allow flex children to shrink so ellipsis / text-overflow works reliably */
-.info {
-  min-width: 0; /* critical for flex items so child overflow/ellipsis apply */
-}
-
-/* Ensure title and sub can shrink within flexible layouts */
-.title,
-.sub {
-  min-width: 0;
-  display: block;
-}
-
-.title {
-  font-size: 13px;
-  font-weight: 600;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.sub {
-  font-size: 12px;
-  /* ensure uploader/name doesn't overflow card layout */
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  display: block;
-}
-
-.actions {
-  display: flex;
-  gap: 6px;
-}
-
+#viewerUploader { font-size: 13px; color: inherit; opacity: 0.9; }
+.preview img, .preview video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.meta { padding: 6px; display: flex; justify-content: space-between; gap: 6px; align-items: center; }
+.info { min-width: 0; }
+.title, .sub { min-width: 0; display: block; }
+.title { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sub { font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
+.actions { display: flex; gap: 6px; }
 .action-btn {
-  background: transparent;
-  border: 1px solid #000;
-  padding: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  border-radius: 0;
+  background: transparent; border: 1px solid #000;
+  padding: 4px; cursor: pointer; font-size: 14px; border-radius: 0;
 }
-
-/* Empty state */
-.empty {
-  padding: 24px;
-  text-align: center;
-  color: #000;
-  border: 1px solid #000;
-  background: transparent;
-}
-
-/* Camera modal - plain layout */
+.empty { padding: 24px; text-align: center; color: #000; border: 1px solid #000; background: transparent; }
 .modal {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0,0,0,0.6);
-  padding: 8px;
+  position: fixed; inset: 0; display: flex;
+  align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.6); padding: 8px;
 }
-
 .modal.hidden { display: none; }
-
 .modal-content {
-  width: 100%;
-  max-width: 720px;
-  background: #fff;
-  border: 1px solid #000;
-  padding: 8px;
-  border-radius: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  width: 100%; max-width: 720px; background: #fff;
+  border: 1px solid #000; padding: 8px; border-radius: 0;
+  display: flex; flex-direction: column; gap: 6px;
 }
-
-#cameraStream {
-  width: 100%;
-  height: 300px;
-  background: #000;
-  object-fit: cover;
-}
-
-.camera-controls {
-  display: flex;
-  gap: 6px;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
+#cameraStream { width: 100%; height: 300px; background: #000; object-fit: cover; }
+.camera-controls { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
 .hidden { display: none; }
-
+#uploadStatus {
+  padding: 8px; font-size: 13px; border: 1px solid #000;
+  margin-bottom: 8px; display: none;
+}
+.progress-bar-wrap { height: 4px; background: #eee; margin-top: 4px; }
+.progress-bar { height: 4px; background: #000; width: 0%; transition: width 0.2s; }
 @media (max-width: 420px) {
   body { padding: 8px; }
   .input-row { flex-direction: column; }
@@ -320,13 +128,8 @@ main {
         <input id="titleInput" placeholder="Title for next upload" />
       </div>
       <div class="buttons-row">
-        <!-- Open camera for photo -->
         <button id="openCameraPhoto" class="btn">📷 Take Photo</button>
-
-        <!-- Open camera for video -->
         <button id="openCameraVideo" class="btn">🎥 Record Video</button>
-
-        <!-- Fallback file inputs (for desktop upload) -->
         <label class="btn">
           <input id="captureImage" type="file" accept="image/*" capture="environment" />
           ⤓ Upload Photo
@@ -335,17 +138,18 @@ main {
           <input id="captureVideo" type="file" accept="video/*" capture="camcorder" />
           ⤓ Upload Video
         </label>
-
         <button id="clearAll" class="btn danger">Delete All</button>
       </div>
     </section>
 
-    <section id="gallery" aria-live="polite">
-      <!-- items inserted here -->
-    </section>
+    <div id="uploadStatus">
+      <span id="uploadStatusText">Uploading...</span>
+      <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar"></div></div>
+    </div>
+
+    <section id="gallery" aria-live="polite"></section>
   </main>
 
-  <!-- Camera modal -->
   <div id="cameraModal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Camera">
     <div class="modal-content">
       <video id="cameraStream" autoplay playsinline muted></video>
@@ -359,13 +163,10 @@ main {
     </div>
   </div>
 
-  <!-- Viewer modal for focused media -->
   <div id="viewerModal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Viewer">
     <div class="modal-content">
       <div id="viewerBody" style="display:flex;flex-direction:column;gap:6px;">
-        <div id="viewerMediaWrap">
-          <!-- media element inserted here -->
-        </div>
+        <div id="viewerMediaWrap"></div>
         <div style="display:flex;justify-content:space-between;align-items:center;">
           <div>
             <div id="viewerTitle" style="font-weight:600;"></div>
@@ -382,512 +183,404 @@ main {
   </div>
 
   <script type="module">
-/*
-Merged db + app JS from original files into single module
-*/
 
-/* db.js content (inlined) */
-/*
-Simple IndexedDB wrapper for storing media items.
-Each item: {
-  id: auto-increment number,
-  title: string,
-  uploader: string,
-  type: "image"|"video",
-  blob: Blob,
-  createdAt: number
-}
-*/
-const DB = {
-  name: 'camera-uploads',
-  store: 'items',
-  db: null,
+/* ── Config ── */
+const CLOUD_NAME    = 'dgk8ldnv0';
+const UPLOAD_PRESET = 'freethecheesevideosandphotos';
+const UPLOAD_URL    = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`;
 
-  async open(){
-    if(this.db) return this.db;
-    return new Promise((res, rej)=>{
-      const r = indexedDB.open(this.name, 1);
-      r.onupgradeneeded = (e)=>{
-        const db = e.target.result;
-        if(!db.objectStoreNames.contains(this.store)){
-          db.createObjectStore(this.store, {keyPath:'id', autoIncrement:true});
-        }
-      };
-      r.onsuccess = ()=>{ this.db = r.result; res(this.db); };
-      r.onerror = ()=> rej(r.error);
-    });
-  },
-
-  async add(item){
-    const db = await this.open();
-    return new Promise((res, rej)=>{
-      const tx = db.transaction(this.store, 'readwrite');
-      const store = tx.objectStore(this.store);
-      const req = store.add(item);
-      req.onsuccess = ()=> res(req.result);
-      req.onerror = ()=> rej(req.error);
-    });
-  },
-
-  async getAll(){
-    const db = await this.open();
-    return new Promise((res, rej)=>{
-      const tx = db.transaction(this.store, 'readonly');
-      const store = tx.objectStore(this.store);
-      const req = store.getAll();
-      req.onsuccess = ()=> res(req.result || []);
-      req.onerror = ()=> rej(req.error);
-    });
-  },
-
-  async delete(id){
-    const db = await this.open();
-    return new Promise((res, rej)=>{
-      const tx = db.transaction(this.store, 'readwrite');
-      const store = tx.objectStore(this.store);
-      const req = store.delete(id);
-      req.onsuccess = ()=> res();
-      req.onerror = ()=> rej(req.error);
-    });
-  },
-
-  async clearAll(){
-    const db = await this.open();
-    return new Promise((res, rej)=>{
-      const tx = db.transaction(this.store, 'readwrite');
-      const store = tx.objectStore(this.store);
-      const req = store.clear();
-      req.onsuccess = ()=> res();
-      req.onerror = ()=> rej(req.error);
-    });
-  }
+const SUPA_URL  = 'https://prevkpjvlaycoatbpppp.supabase.co';
+const SUPA_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InByZXZrcGp2bGF5Y29hdGJwcHBwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzMzg5NTIsImV4cCI6MjA5NTkxNDk1Mn0.0HfZ6T-S2rTKEvPvzbGkLU4q3WMyFydU1wYCldLYwHk';
+const SUPA_HEADERS = {
+  'Content-Type': 'application/json',
+  'apikey': SUPA_KEY,
+  'Authorization': `Bearer ${SUPA_KEY}`
 };
 
-/* app.js content (inlined, adjusted to use local DB const) */
+/* ── Supabase helpers ── */
+async function dbGetAll(){
+  const res = await fetch(`${SUPA_URL}/rest/v1/uploads?select=*&order=created_at.desc`, {
+    headers: SUPA_HEADERS
+  });
+  if(!res.ok) throw new Error('Failed to load uploads');
+  return res.json();
+}
 
-const uploaderName = document.getElementById('uploaderName');
-const titleInput = document.getElementById('titleInput');
-const captureImage = document.getElementById('captureImage');
-const captureVideo = document.getElementById('captureVideo');
+async function dbAdd(entry){
+  const res = await fetch(`${SUPA_URL}/rest/v1/uploads`, {
+    method: 'POST',
+    headers: { ...SUPA_HEADERS, 'Prefer': 'return=representation' },
+    body: JSON.stringify({
+      public_id: entry.publicId,
+      title:     entry.title,
+      uploader:  entry.uploader,
+      type:      entry.type,
+      url:       entry.url,
+      created_at: entry.createdAt
+    })
+  });
+  if(!res.ok) throw new Error('Failed to save upload record');
+  return res.json();
+}
+
+async function dbDelete(publicId){
+  const res = await fetch(`${SUPA_URL}/rest/v1/uploads?public_id=eq.${encodeURIComponent(publicId)}`, {
+    method: 'DELETE',
+    headers: SUPA_HEADERS
+  });
+  if(!res.ok) throw new Error('Failed to delete record');
+}
+
+async function dbClearAll(){
+  const res = await fetch(`${SUPA_URL}/rest/v1/uploads?id=neq.00000000-0000-0000-0000-000000000000`, {
+    method: 'DELETE',
+    headers: SUPA_HEADERS
+  });
+  if(!res.ok) throw new Error('Failed to clear uploads');
+}
+
+/* ── Cloudinary upload ── */
+async function uploadToCloudinary(blob, title, uploader, type, onProgress){
+  const fd = new FormData();
+  fd.append('file', blob);
+  fd.append('upload_preset', UPLOAD_PRESET);
+  fd.append('context', `title=${encodeURIComponent(title)}|uploader=${encodeURIComponent(uploader)}`);
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', UPLOAD_URL);
+    xhr.upload.onprogress = (e) => {
+      if(e.lengthComputable && onProgress) onProgress(e.loaded / e.total);
+    };
+    xhr.onload = () => {
+      if(xhr.status >= 200 && xhr.status < 300){
+        const data = JSON.parse(xhr.responseText);
+        resolve({ publicId: data.public_id, title, uploader, type, url: data.secure_url, createdAt: Date.now() });
+      } else {
+        reject(new Error(`Cloudinary upload failed: ${xhr.status}`));
+      }
+    };
+    xhr.onerror = () => reject(new Error('Network error during upload'));
+    xhr.send(fd);
+  });
+}
+
+/* ── UI refs ── */
+const uploaderName   = document.getElementById('uploaderName');
+const titleInput     = document.getElementById('titleInput');
+const captureImage   = document.getElementById('captureImage');
+const captureVideo   = document.getElementById('captureVideo');
 const openCameraPhoto = document.getElementById('openCameraPhoto');
 const openCameraVideo = document.getElementById('openCameraVideo');
-const gallery = document.getElementById('gallery');
-
-// simple mobile detection
-const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-const clearAll = document.getElementById('clearAll');
-
-const cameraModal = document.getElementById('cameraModal');
-const cameraStream = document.getElementById('cameraStream');
-const captureCanvas = document.getElementById('captureCanvas');
-const takePhotoBtn = document.getElementById('takePhoto');
+const gallery        = document.getElementById('gallery');
+const clearAllBtn    = document.getElementById('clearAll');
+const uploadStatus   = document.getElementById('uploadStatus');
+const uploadStatusText = document.getElementById('uploadStatusText');
+const progressBar    = document.getElementById('progressBar');
+const cameraModal    = document.getElementById('cameraModal');
+const cameraStream   = document.getElementById('cameraStream');
+const captureCanvas  = document.getElementById('captureCanvas');
+const takePhotoBtn   = document.getElementById('takePhoto');
 const startRecordBtn = document.getElementById('startRecord');
-const stopRecordBtn = document.getElementById('stopRecord');
+const stopRecordBtn  = document.getElementById('stopRecord');
 const closeCameraBtn = document.getElementById('closeCamera');
-
-// viewer modal elements
-const viewerModal = document.getElementById('viewerModal');
+const viewerModal    = document.getElementById('viewerModal');
 const viewerMediaWrap = document.getElementById('viewerMediaWrap');
-const viewerTitle = document.getElementById('viewerTitle');
+const viewerTitle    = document.getElementById('viewerTitle');
 const viewerUploader = document.getElementById('viewerUploader');
-const viewerClose = document.getElementById('viewerClose');
+const viewerClose    = document.getElementById('viewerClose');
 const viewerDownload = document.getElementById('viewerDownload');
-const viewerDelete = document.getElementById('viewerDelete');
+const viewerDelete   = document.getElementById('viewerDelete');
 
-let mediaStream = null;
-let mediaRecorder = null;
-let recordedChunks = [];
-let currentMode = 'photo'; // 'photo' or 'video'
+const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+let mediaStream = null, mediaRecorder = null, recordedChunks = [], currentMode = 'photo';
 
-function el(tag, props = {}, ...children){
+function showUploadStatus(text, progress){
+  uploadStatus.style.display = 'block';
+  uploadStatusText.textContent = text;
+  progressBar.style.width = (progress * 100).toFixed(0) + '%';
+}
+function hideUploadStatus(){
+  uploadStatus.style.display = 'none';
+  progressBar.style.width = '0%';
+}
+
+function el(tag, props={}, ...children){
   const e = document.createElement(tag);
   Object.assign(e, props);
-  for(const c of children) if(c!=null) e.append(typeof c === 'string' ? document.createTextNode(c) : c);
+  for(const c of children) if(c!=null) e.append(typeof c==='string'?document.createTextNode(c):c);
   return e;
 }
 
 let _activePreviewOverlay = null;
-// global flag to temporarily disable per-item overlays (used while viewer is open)
-window.__overlaysDisabled = false;
-
-// Hide any active preview overlay when clicking/tapping outside of a preview (global handler)
-// This prevents overlays from sticking when focus/interaction moves elsewhere.
-document.addEventListener('click', (e) => {
-  if (!_activePreviewOverlay) return;
-  // If the click target is inside the active overlay's preview, do nothing
+document.addEventListener('click', (e)=>{
+  if(!_activePreviewOverlay) return;
   const previewEl = _activePreviewOverlay.closest('.preview');
-  if (previewEl && previewEl.contains(e.target)) return;
+  if(previewEl && previewEl.contains(e.target)) return;
   _activePreviewOverlay.classList.remove('visible');
   _activePreviewOverlay = null;
 }, { passive: true });
 
 function createCard(item){
   const isVideo = item.type === 'video';
-  // remove keyboard focus on touch devices to avoid janky mobile focus behavior
   const preview = el('div', {className:'preview', tabIndex: isMobile ? -1 : 0});
-  let thumbEl;
-
   if(isVideo){
     const v = document.createElement('video');
-    v.src = URL.createObjectURL(item.blob);
-    v.controls = false;
-    v.muted = true;
-    v.loop = true;
-    v.playsInline = true;
-    // mouse hover playback for desktop
+    v.src = item.url; v.controls = false; v.muted = true; v.loop = true; v.playsInline = true;
     v.addEventListener('mouseenter', ()=>v.play());
     v.addEventListener('mouseleave', ()=>v.pause());
-    thumbEl = v;
     preview.appendChild(v);
   } else {
     const img = document.createElement('img');
-    img.src = URL.createObjectURL(item.blob);
-    img.loading = 'lazy';
-    thumbEl = img;
+    img.src = item.url; img.loading = 'lazy';
     preview.appendChild(img);
   }
-
-  // overlay actions inside the preview so icons fit per item
   const overlay = el('div', {className:'preview-overlay'});
   const overlayDownload = el('button', {className:'overlay-btn', title:'Download'}, '⬇️');
-  const overlayOpen = el('button', {className:'overlay-btn', title:'Open'}, '🔍');
-  const overlayDelete = el('button', {className:'overlay-btn', title:'Delete'}, '🗑️');
-  overlay.appendChild(overlayOpen);
-  overlay.appendChild(overlayDownload);
-  overlay.appendChild(overlayDelete);
+  const overlayOpen     = el('button', {className:'overlay-btn', title:'Open'},     '🔍');
+  const overlayDelete   = el('button', {className:'overlay-btn', title:'Delete'},   '🗑️');
+  overlay.append(overlayOpen, overlayDownload, overlayDelete);
   preview.appendChild(overlay);
 
-  // meta info below
-  const title = el('div', {className:'title'}, item.title || 'Untitled');
-  const sub = el('div', {className:'sub'}, item.uploader || 'Anonymous');
-
   const meta = el('div', {className:'meta'},
-    el('div', {className:'info'}, title, sub)
+    el('div', {className:'info'},
+      el('div', {className:'title'}, item.title || 'Untitled'),
+      el('div', {className:'sub'},   item.uploader || 'Anonymous')
+    )
   );
-
-  // card assembly
   const card = el('article', {className:'card'});
-  card.appendChild(preview);
-  card.appendChild(meta);
+  card.append(preview, meta);
 
-  // Actions
   overlayDownload.addEventListener('click', (e)=>{
     e.stopPropagation();
     const a = document.createElement('a');
-    a.href = URL.createObjectURL(item.blob);
-    const ext = item.type === 'video' ? 'mp4' : 'png';
-    a.download = `${(item.title||'capture').replace(/\s+/g,'_')}.${ext}`;
-    a.click();
-    URL.revokeObjectURL(a.href);
+    a.href = item.url;
+    a.download = `${(item.title||'capture').replace(/\s+/g,'_')}.${item.type==='video'?'mp4':'jpg'}`;
+    a.target = '_blank'; a.click();
   });
 
   overlayDelete.addEventListener('click', async (e)=>{
     e.stopPropagation();
     if(!confirm('Delete this item?')) return;
-    await DB.delete(item.id);
+    await dbDelete(item.public_id || item.publicId);
     render();
   });
 
-  function openViewer(){
-    // dispatch a custom event with item
-    const ev = new CustomEvent('open-viewer', { detail: item });
-    window.dispatchEvent(ev);
-  }
-
+  function openViewer(){ window.dispatchEvent(new CustomEvent('open-viewer', { detail: item })); }
   overlayOpen.addEventListener('click', (e)=>{ e.stopPropagation(); openViewer(); });
 
-  // Mobile touch behavior: first tap reveals overlay, second tap opens viewer.
   if(isMobile){
-    // make overlay toggle on touch; ensure only one visible at a time
     preview.addEventListener('touchend', (ev)=>{
       ev.stopPropagation();
-      // if overlay already visible, treat as open
       const shown = overlay.classList.contains('visible');
-      // hide any other overlay
       if(_activePreviewOverlay && _activePreviewOverlay !== overlay){
-        _activePreviewOverlay.classList.remove('visible');
-        _activePreviewOverlay = null;
+        _activePreviewOverlay.classList.remove('visible'); _activePreviewOverlay = null;
       }
-      if(shown){
-        openViewer();
-      } else {
-        overlay.classList.add('visible');
-        _activePreviewOverlay = overlay;
-        // auto-hide after 4s to avoid sticking overlays
-        setTimeout(()=>{
-          if(overlay === _activePreviewOverlay) { overlay.classList.remove('visible'); _activePreviewOverlay = null; }
-        }, 4000);
+      if(shown){ openViewer(); }
+      else {
+        overlay.classList.add('visible'); _activePreviewOverlay = overlay;
+        setTimeout(()=>{ if(overlay===_activePreviewOverlay){ overlay.classList.remove('visible'); _activePreviewOverlay=null; } }, 4000);
       }
     }, { passive: true });
-
-    // close overlay when tapping elsewhere
     document.addEventListener('touchstart', (e)=>{
       if(!overlay.classList.contains('visible')) return;
-      if(!preview.contains(e.target)) {
-        overlay.classList.remove('visible');
-        if(_activePreviewOverlay === overlay) _activePreviewOverlay = null;
-      }
+      if(!preview.contains(e.target)){ overlay.classList.remove('visible'); if(_activePreviewOverlay===overlay) _activePreviewOverlay=null; }
     }, { passive: true });
   } else {
-    // Desktop: direct open on click and keyboard activation
     preview.addEventListener('click', openViewer);
-    preview.addEventListener('keydown', (e)=>{ if(e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openViewer(); } });
+    preview.addEventListener('keydown', (e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); openViewer(); } });
   }
 
-  // Ensure overlay is cleared when the preview loses focus (fixes stuck icons after focus)
-  preview.addEventListener('focusout', (e) => {
-    // If focus moved inside the same preview, do nothing
-    if (preview.contains(e.relatedTarget)) return;
+  preview.addEventListener('focusout', (e)=>{
+    if(preview.contains(e.relatedTarget)) return;
     overlay.classList.remove('visible');
-    if (_activePreviewOverlay === overlay) _activePreviewOverlay = null;
+    if(_activePreviewOverlay===overlay) _activePreviewOverlay=null;
   });
 
   return card;
 }
 
 async function render(){
-  const items = await DB.getAll();
-  gallery.innerHTML = '';
-  if(items.length === 0){
-    gallery.appendChild(el('div', {className:'empty'}, 'No uploads yet — use the camera buttons above.'));
-    return;
+  gallery.innerHTML = '<div class="empty">Loading…</div>';
+  try {
+    const items = await dbGetAll();
+    gallery.innerHTML = '';
+    if(items.length === 0){
+      gallery.appendChild(el('div', {className:'empty'}, 'No uploads yet — use the camera buttons above.'));
+      return;
+    }
+    for(const it of items) gallery.appendChild(createCard(it));
+  } catch(err){
+    gallery.innerHTML = '';
+    gallery.appendChild(el('div', {className:'empty'}, 'Could not load uploads: ' + err.message));
   }
-  items.sort((a,b)=>b.createdAt - a.createdAt);
-  for(const it of items) gallery.appendChild(createCard(it));
 }
 
 async function handleFiles(fileList, type){
   if(!fileList || fileList.length === 0) return;
   const file = fileList[0];
-  const title = (titleInput.value || '').trim() || file.name || (type === 'video' ? 'Video' : 'Photo');
-  const uploader = (uploaderName.value || '').trim() || 'Anonymous';
-  const item = {
-    title,
-    uploader,
-    type,
-    blob: file,
-    createdAt: Date.now()
-  };
-  await DB.add(item);
-  titleInput.value = '';
-  render();
+  const title    = (titleInput.value||'').trim() || file.name || (type==='video'?'Video':'Photo');
+  const uploader = (uploaderName.value||'').trim() || 'Anonymous';
+  showUploadStatus('Uploading…', 0);
+  try {
+    const entry = await uploadToCloudinary(file, title, uploader, type, (p)=>{
+      showUploadStatus(`Uploading… ${Math.round(p*100)}%`, p);
+    });
+    showUploadStatus('Saving…', 1);
+    await dbAdd(entry);
+    titleInput.value = '';
+    render();
+  } catch(err){
+    alert('Upload failed: ' + err.message);
+    console.error(err);
+  } finally { hideUploadStatus(); }
 }
 
-// File input fallbacks
 captureImage.addEventListener('change', (e)=> handleFiles(e.target.files, 'image'));
 captureVideo.addEventListener('change', (e)=> handleFiles(e.target.files, 'video'));
 
-/* Camera modal flows
-   On mobile devices: use the native file inputs with capture attributes (invokes device camera/recorder).
-   On non-mobile: open the getUserMedia camera modal as before.
-*/
 async function openCamera(mode){
   currentMode = mode;
-
-  // If on mobile, trigger the corresponding capture file input to open the native camera UI
   if(isMobile){
-    if(mode === 'photo'){
-      // ensure input accepts images and has capture attribute (defined in HTML)
-      captureImage.value = ''; // reset so selecting same file still triggers change
-      captureImage.click();
-      return;
-    } else {
-      captureVideo.value = '';
-      captureVideo.click();
-      return;
-    }
+    if(mode==='photo'){ captureImage.value=''; captureImage.click(); return; }
+    else { captureVideo.value=''; captureVideo.click(); return; }
   }
-
-  // Desktop / non-mobile path: open in-app camera modal
-  takePhotoBtn.style.display = mode === 'photo' ? '' : 'none';
-  startRecordBtn.style.display = mode === 'video' ? '' : 'none';
-  stopRecordBtn.style.display = 'none';
+  takePhotoBtn.style.display   = mode==='photo' ? '' : 'none';
+  startRecordBtn.style.display = mode==='video' ? '' : 'none';
+  stopRecordBtn.style.display  = 'none';
   startRecordBtn.disabled = false;
-
-  try{
-    const constraints = { video: { facingMode: 'environment' }, audio: mode === 'video' };
-    mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+  try {
+    mediaStream = await navigator.mediaDevices.getUserMedia({ video:{facingMode:'environment'}, audio: mode==='video' });
     cameraStream.srcObject = mediaStream;
     cameraModal.classList.remove('hidden');
     cameraStream.play();
-  }catch(err){
-    alert('Camera access denied or not available.');
-    console.error(err);
-  }
+  } catch(err){ alert('Camera access denied or not available.'); console.error(err); }
 }
 
 function closeCamera(){
   cameraModal.classList.add('hidden');
-  if(mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
-  if(mediaStream){
-    for(const t of mediaStream.getTracks()) t.stop();
-    mediaStream = null;
-  }
-  cameraStream.srcObject = null;
-  recordedChunks = [];
+  if(mediaRecorder && mediaRecorder.state==='recording') mediaRecorder.stop();
+  if(mediaStream){ for(const t of mediaStream.getTracks()) t.stop(); mediaStream=null; }
+  cameraStream.srcObject = null; recordedChunks = [];
 }
 
-// Capture photo
 takePhotoBtn.addEventListener('click', async ()=>{
   if(!mediaStream) return;
-  const videoTrack = mediaStream.getVideoTracks()[0];
-  const settings = videoTrack.getSettings();
-  const w = settings.width || cameraStream.videoWidth || 1280;
-  const h = settings.height || cameraStream.videoHeight || 720;
-  captureCanvas.width = w;
-  captureCanvas.height = h;
-  const ctx = captureCanvas.getContext('2d');
-  ctx.drawImage(cameraStream, 0, 0, w, h);
+  const vt = mediaStream.getVideoTracks()[0];
+  const s  = vt.getSettings();
+  const w  = s.width  || cameraStream.videoWidth  || 1280;
+  const h  = s.height || cameraStream.videoHeight || 720;
+  captureCanvas.width = w; captureCanvas.height = h;
+  captureCanvas.getContext('2d').drawImage(cameraStream, 0, 0, w, h);
   captureCanvas.toBlob(async (blob)=>{
     if(!blob) return;
-    const title = (titleInput.value || '').trim() || `Photo_${Date.now()}`;
-    const uploader = (uploaderName.value || '').trim() || 'Anonymous';
-    await DB.add({ title, uploader, type: 'image', blob, createdAt: Date.now() });
-    titleInput.value = '';
-    render();
+    const title    = (titleInput.value||'').trim() || `Photo_${Date.now()}`;
+    const uploader = (uploaderName.value||'').trim() || 'Anonymous';
     closeCamera();
+    showUploadStatus('Uploading photo…', 0);
+    try {
+      const entry = await uploadToCloudinary(blob, title, uploader, 'image', (p)=>{
+        showUploadStatus(`Uploading… ${Math.round(p*100)}%`, p);
+      });
+      showUploadStatus('Saving…', 1);
+      await dbAdd(entry);
+      titleInput.value = ''; render();
+    } catch(err){ alert('Upload failed: '+err.message); }
+    finally { hideUploadStatus(); }
   }, 'image/png');
 });
 
-// Recording
 startRecordBtn.addEventListener('click', ()=>{
   if(!mediaStream) return;
   recordedChunks = [];
-  try{
-    mediaRecorder = new MediaRecorder(mediaStream, { mimeType: 'video/webm;codecs=vp9' });
-  }catch(e){
-    mediaRecorder = new MediaRecorder(mediaStream);
-  }
+  try { mediaRecorder = new MediaRecorder(mediaStream, {mimeType:'video/webm;codecs=vp9'}); }
+  catch(e){ mediaRecorder = new MediaRecorder(mediaStream); }
   mediaRecorder.ondataavailable = (e)=>{ if(e.data && e.data.size) recordedChunks.push(e.data); };
   mediaRecorder.onstop = async ()=>{
-    const blob = new Blob(recordedChunks, { type: 'video/webm' });
-    const title = (titleInput.value || '').trim() || `Video_${Date.now()}`;
-    const uploader = (uploaderName.value || '').trim() || 'Anonymous';
-    await DB.add({ title, uploader, type: 'video', blob, createdAt: Date.now() });
-    titleInput.value = '';
-    render();
+    const blob = new Blob(recordedChunks, {type:'video/webm'});
+    const title    = (titleInput.value||'').trim() || `Video_${Date.now()}`;
+    const uploader = (uploaderName.value||'').trim() || 'Anonymous';
     closeCamera();
+    showUploadStatus('Uploading video…', 0);
+    try {
+      const entry = await uploadToCloudinary(blob, title, uploader, 'video', (p)=>{
+        showUploadStatus(`Uploading… ${Math.round(p*100)}%`, p);
+      });
+      showUploadStatus('Saving…', 1);
+      await dbAdd(entry); titleInput.value = ''; render();
+    } catch(err){ alert('Upload failed: '+err.message); }
+    finally { hideUploadStatus(); }
   };
   mediaRecorder.start();
-  startRecordBtn.disabled = true;
-  stopRecordBtn.disabled = false;
-  stopRecordBtn.style.display = '';
+  startRecordBtn.disabled = true; stopRecordBtn.disabled = false; stopRecordBtn.style.display = '';
 });
 
 stopRecordBtn.addEventListener('click', ()=>{
-  if(mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+  if(mediaRecorder && mediaRecorder.state==='recording') mediaRecorder.stop();
 });
 
-// Open/close camera controls
 openCameraPhoto.addEventListener('click', ()=> openCamera('photo'));
 openCameraVideo.addEventListener('click', ()=> openCamera('video'));
-closeCameraBtn.addEventListener('click', ()=> closeCamera());
+closeCameraBtn.addEventListener('click',  ()=> closeCamera());
 
- /* Helpers to convert Blobs <-> data URLs for export/import */
-async function blobToDataURL(blob){
-  return await new Promise((res,rej)=>{
-    const fr = new FileReader();
-    fr.onload = ()=> res(fr.result);
-    fr.onerror = ()=> rej(fr.error);
-    fr.readAsDataURL(blob);
-  });
-}
-async function dataURLToBlob(dataURL){
-  const resp = await fetch(dataURL);
-  return await resp.blob();
-}
-
-
-
-/* Clear all */
-clearAll.addEventListener('click', async ()=>{
-  if(!confirm('Delete ALL uploads?')) return;
-  await DB.clearAll();
-  render();
+clearAllBtn.addEventListener('click', async ()=>{
+  if(!confirm('Delete ALL uploads from every device?')) return;
+  try { await dbClearAll(); render(); }
+  catch(err){ alert('Failed to clear: '+err.message); }
 });
 
-// Viewer logic: open/close and actions
+/* ── Viewer ── */
 let currentViewerItem = null;
 window.addEventListener('open-viewer', (e)=>{
   const item = e.detail;
-
-  // Hide any visible per-item overlay when opening the viewer so icons disappear while focused
-  document.querySelectorAll('.preview-overlay.visible').forEach(o => o.classList.remove('visible'));
+  document.querySelectorAll('.preview-overlay.visible').forEach(o=>o.classList.remove('visible'));
   _activePreviewOverlay = null;
-
-  // disable overlays globally so CSS/handlers won't show icons while viewer is open
-  window.__overlaysDisabled = true;
   document.body.classList.add('overlays-disabled');
-
   currentViewerItem = item;
   viewerMediaWrap.innerHTML = '';
-  if(item.type === 'video'){
+  if(item.type==='video'){
     const v = document.createElement('video');
-    v.src = URL.createObjectURL(item.blob);
-    v.controls = true;
-    // avoid autoplay to prevent iOS from opening native fullscreen player
-    v.autoplay = false;
-    v.playsInline = true;
-    // ensure video stays contained inside the modal and doesn't overflow UI
-    v.style.maxWidth = '100%';
-    v.style.maxHeight = '60vh';
-    v.style.objectFit = 'contain';
-    v.style.display = 'block';
+    v.src = item.url; v.controls = true; v.autoplay = false; v.playsInline = true;
+    v.style.cssText = 'max-width:100%;max-height:60vh;object-fit:contain;display:block;';
     viewerMediaWrap.appendChild(v);
   } else {
     const img = document.createElement('img');
-    img.src = URL.createObjectURL(item.blob);
-    img.style.maxWidth = '100%';
-    img.style.maxHeight = '60vh';
-    img.style.objectFit = 'contain';
-    img.style.display = 'block';
+    img.src = item.url;
+    img.style.cssText = 'max-width:100%;max-height:60vh;object-fit:contain;display:block;';
     viewerMediaWrap.appendChild(img);
   }
-  viewerTitle.textContent = item.title || 'Untitled';
+  viewerTitle.textContent    = item.title    || 'Untitled';
   viewerUploader.textContent = item.uploader || 'Anonymous';
   viewerModal.classList.remove('hidden');
 });
 
 viewerClose.addEventListener('click', closeViewer);
-viewerModal.addEventListener('click', (e)=>{ if(e.target === viewerModal) closeViewer(); });
+viewerModal.addEventListener('click', (e)=>{ if(e.target===viewerModal) closeViewer(); });
 
 viewerDownload.addEventListener('click', ()=>{
   if(!currentViewerItem) return;
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(currentViewerItem.blob);
-  const ext = currentViewerItem.type === 'video' ? 'mp4' : 'png';
-  a.download = `${(currentViewerItem.title||'capture').replace(/\s+/g,'_')}.${ext}`;
-  a.click();
-  URL.revokeObjectURL(a.href);
+  a.href = currentViewerItem.url;
+  a.download = `${(currentViewerItem.title||'capture').replace(/\s+/g,'_')}.${currentViewerItem.type==='video'?'mp4':'jpg'}`;
+  a.target = '_blank'; a.click();
 });
 
 viewerDelete.addEventListener('click', async ()=>{
   if(!currentViewerItem) return;
   if(!confirm('Delete this item?')) return;
-  await DB.delete(currentViewerItem.id);
-  closeViewer();
-  render();
+  await dbDelete(currentViewerItem.public_id || currentViewerItem.publicId);
+  closeViewer(); render();
 });
 
 function closeViewer(){
   viewerModal.classList.add('hidden');
-  // re-enable per-item overlays after viewer is closed
-  window.__overlaysDisabled = false;
   document.body.classList.remove('overlays-disabled');
-
-  if(viewerMediaWrap.firstChild && viewerMediaWrap.firstChild.tagName === 'VIDEO'){
+  if(viewerMediaWrap.firstChild?.tagName==='VIDEO'){
     try{ viewerMediaWrap.firstChild.pause(); }catch(e){}
   }
-  viewerMediaWrap.innerHTML = '';
-  currentViewerItem = null;
+  viewerMediaWrap.innerHTML = ''; currentViewerItem = null;
 }
 
-// Start
-(async ()=>{
-  await DB.open();
-  render();
-})();
+render();
   </script>
 </body>
 </html>
